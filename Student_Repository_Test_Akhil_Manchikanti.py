@@ -1,8 +1,18 @@
 import unittest
-from HW09_Akhil_Manchikanti import Student, Instructor, Repository
+from Student_Repository_Akhil_Manchikanti import Student, Instructor, Repository
 
 class TestRepository(unittest.TestCase):
     """ Tests all the methods in HW09_Akhil_Manchikanti """
+
+    def test_Major(self) -> None:
+        """ Tests the Major repository """
+        data: Repository = Repository("D:\MS\Stevens Institute of Technology\SSW810\Assignment10\Stevens")
+        major_data = {major: maj.info() for major, maj in data._majors.items()}
+        expected = {
+            'SFEN': ['SFEN', ['SSW 540', 'SSW 555', 'SSW 564', 'SSW 567'] ,['CS 501', 'CS 513', 'CS 545']],
+            'SYEN': ['SYEN', ['SYS 612', 'SYS 671', 'SYS 800'], ['SSW 540', 'SSW 565', 'SSW 810']]}
+        self.assertEqual(expected, major_data)
+
     def test_Student(self) -> None:
         """ Tests the student repository """
         data: Repository = Repository("D:\MS\Stevens Institute of Technology\SSW810\Assignment10\Stevens")
@@ -37,14 +47,14 @@ class TestRepository(unittest.TestCase):
                     ('98760', 'Darwin, C', 'SYEN', 'SYS 645', 1)}
         self.assertEqual(instructor_data, expected)
 
-    def test_Major(self) -> None:
-        """ Tests the Major repository """
-        data: Repository = Repository("D:\MS\Stevens Institute of Technology\SSW810\Assignment10\Stevens")
-        major_data = {major: maj.info() for major, maj in data._majors.items()}
-        expected = {
-            'SFEN': ['SFEN', ['SSW 540', 'SSW 555', 'SSW 564', 'SSW 567'] ,['CS 501', 'CS 513', 'CS 545']],
-            'SYEN': ['SYEN', ['SYS 612', 'SYS 671', 'SYS 800'], ['SSW 540', 'SSW 565', 'SSW 810']]}
-        self.assertEqual(expected, major_data)
+    # def test_Major(self) -> None:
+    #     """ Tests the Major repository """
+    #     data: Repository = Repository("D:\MS\Stevens Institute of Technology\SSW810\Assignment10\Stevens")
+    #     major_data = {major: maj.info() for major, maj in data._majors.items()}
+    #     expected = {
+    #         'SFEN': ['SFEN', ['SSW 540', 'SSW 555', 'SSW 564', 'SSW 567'] ,['CS 501', 'CS 513', 'CS 545']],
+    #         'SYEN': ['SYEN', ['SYS 612', 'SYS 671', 'SYS 800'], ['SSW 540', 'SSW 565', 'SSW 810']]}
+    #     self.assertEqual(expected, major_data)
 
 if __name__ == "__main__":
     unittest.main(exit=False, verbosity=2)

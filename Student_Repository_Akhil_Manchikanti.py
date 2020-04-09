@@ -28,7 +28,10 @@ class Major:
 
     def info(self) -> List:
         """ list of information to be printed in pretty table """
-        return [self._major, sorted(self._required), sorted(self._elective)]
+        sorted_required = sorted(self._required)
+        sorted_elective = sorted(self._elective)
+        return [self._major, sorted_required, sorted_elective]
+
 
 class Student:
     """ Stores information about a single student with all of the relevant information including:
@@ -42,18 +45,17 @@ class Student:
         self._name: str = name
         self._major: str = major
         self._courses: Dict[str, str] = dict() #key: courses value: str with grade
-        self._remaining_required: List[str] = required
+        self._remaining_required: List[str] = list.copy(required)
         self._remaining_electives: List[str] = electives
-    
+
     def course_grade(self, course: str, grade: str) -> None:
         """ store the students grade for each course """
-        
         if Student.grades_to_gpa[grade] > 0:
             self._courses[course] = grade
             if course in self._remaining_required:
                 self._remaining_required.remove(course)
             elif course in self._remaining_electives:
-                self._remaining_electives = list()
+                self._remaining_electives = list() 
 
     def claculate_gpa(self) -> float:
         """ Function to caluclate the students GPA """
@@ -61,6 +63,9 @@ class Student:
         if len(scores) > 0:
             return round(sum(scores)/len(scores),2)
         return 0
+
+    def remaining_courses(self) -> tuple:
+        """ finds the remaining required and remaining electives for each student """
 
     def info(self) -> List:
         """ list of the information returned to be printed in pretty table"""
@@ -85,13 +90,6 @@ class Instructor:
 
     def info(self) -> Iterator[Tuple]:
         """ information returned to be printed in pretty table """
-        # all_subjects_instructor: List[List] = list()
-
-        # for offset, (course, no_students) in enumerate(self.courses.items()):
-        #     all_subjects_instructor[offset] = [self.cwid, self.name, self.department, course, no_students]
-        
-        # return all_subjects_instructor
-
         for course, no_students in self._courses.items():
             yield (self._cwid, self._name, self._department, course, no_students)
 
@@ -104,16 +102,12 @@ class Repository:
         self._students: Dict[str, Student] = dict() #key: cwid value:instance of class Student
         self._instructors: Dict[str, Instructor] = dict() #key: cwid value: instance of class Instructor
         self._majors: Dict[str, Major] = dict() #key: major value: instance of class Major
-        # self._majors[Major] = Major()
 
         try:
             self._majors_data()
             self._student_data()
             self._instructor_data()
             self._grades_data()
-            
-            # self.student_pretty_table()
-            # self.instructor_pretty_table()
         except ValueError as ve:
             print(ve)
         except FileNotFoundError as fnfe:
@@ -187,7 +181,6 @@ class Repository:
         pt: PrettyTable = PrettyTable(field_names=Student.pt_hdr)
         for stud in self._students.values():
             pt.add_row(stud.info())
-        # print("Student Summary")
         print(pt)
 
     def instructor_pretty_table(self) -> None:
@@ -196,7 +189,6 @@ class Repository:
         for inst in self._instructors.values():
             for each_instructor in inst.info():
                 pt.add_row(each_instructor)
-        # print("Instructor Summary")
         print(pt)
 
     def major_pretty_table(self) -> None:
