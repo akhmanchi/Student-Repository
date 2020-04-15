@@ -1,10 +1,12 @@
 """to create a data repository of courses, students, and instructors"""
 
 import os
+import sqlite3
 from HW08_Akhil_Manchikanti import file_reader
-from typing import Dict, DefaultDict, List, Tuple, Iterator
+from typing import Dict, DefaultDict, List, Tuple, Iterator, Set
 from collections import defaultdict
 from prettytable import PrettyTable
+
 
 class Major:
     """ Stores information about each major and if it is required or elective and the course name itself"""
@@ -25,12 +27,16 @@ class Major:
             self._elective.append(course)
         else:
             print("Error in specifying Required/Elective course")
+    
+    def get_required(self) -> List:
+        return sorted(self._required)
+
+    def get_elective(self) -> List:
+        return sorted(self._elective)
 
     def info(self) -> List:
         """ list of information to be printed in pretty table """
-        sorted_required = sorted(self._required)
-        sorted_elective = sorted(self._elective)
-        return [self._major, sorted_required, sorted_elective]
+        return [self._major, self.get_required(), self.get_elective()]
 
 
 class Student:
@@ -45,17 +51,20 @@ class Student:
         self._name: str = name
         self._major: str = major
         self._courses: Dict[str, str] = dict() #key: courses value: str with grade
+        self._completed_courses: List[str] = list()
         self._remaining_required: List[str] = list.copy(required)
         self._remaining_electives: List[str] = electives
 
     def course_grade(self, course: str, grade: str) -> None:
         """ store the students grade for each course """
+        self._courses[course] = grade
+
         if Student.grades_to_gpa[grade] > 0:
-            self._courses[course] = grade
+            self._completed_courses.append(course)
             if course in self._remaining_required:
                 self._remaining_required.remove(course)
             elif course in self._remaining_electives:
-                self._remaining_electives = list() 
+                self._remaining_electives = list()
 
     def claculate_gpa(self) -> float:
         """ Function to caluclate the students GPA """
@@ -68,8 +77,8 @@ class Student:
         """ finds the remaining required and remaining electives for each student """
 
     def info(self) -> List:
-        """ list of the information returned to be printed in pretty table"""
-        return [self._cwid, self._name, self._major, sorted(self._courses.keys()), sorted(self._remaining_required), sorted(self._remaining_electives), self.claculate_gpa()]
+        """ list of the information returned to be printed in pretty table""" #sorted(self._courses.keys())
+        return [self._cwid, self._name, self._major, sorted(self._completed_courses), sorted(self._remaining_required), sorted(self._remaining_electives), self.claculate_gpa()]
         
 
 class Instructor:
@@ -102,6 +111,7 @@ class Repository:
         self._students: Dict[str, Student] = dict() #key: cwid value:instance of class Student
         self._instructors: Dict[str, Instructor] = dict() #key: cwid value: instance of class Instructor
         self._majors: Dict[str, Major] = dict() #key: major value: instance of class Major
+        # self._student_grade: Tuple[str, str, str, str, str] = tuple()
 
         try:
             self._majors_data()
@@ -123,6 +133,9 @@ class Repository:
             print("\nInstructor Summary")
             self.instructor_pretty_table()
 
+            print("\nStudent Grade Summary")
+            self.student_grades_table_db(os.path.join(self._dir_path, "HW11.sql"))
+
     def _majors_data(self) -> None:
         """ Reads the majors and requried courses for each major """
         try:
@@ -138,7 +151,7 @@ class Repository:
     def _student_data(self) -> None:
         """ creates instances of students and updates it in the container"""
         try:
-            for cwid, name, major in file_reader(os.path.join(self._dir_path, "students.txt"), 3, ";", True):
+            for cwid, name, major in file_reader(os.path.join(self._dir_path, "students.txt"), 3, "\t", True):
                 if cwid in self._students:
                     print(f"{cwid} is duplicate")
                 else:
@@ -149,7 +162,7 @@ class Repository:
     def _instructor_data(self) -> None:
         """ creates instances of instructors and updates it in the container """
         try:
-            for cwid, name, department in file_reader(os.path.join(self._dir_path, "instructors.txt"), 3, "|", True):
+            for cwid, name, department in file_reader(os.path.join(self._dir_path, "instructors.txt"), 3, "\t", True):
                 if cwid in self._instructors:
                     print(f"{cwid} is duplicate")
                 else:
@@ -160,7 +173,7 @@ class Repository:
     def _grades_data(self) -> None:
         """ Reads the grades file and updates the student and instructor instances accordingly """
         try:
-            for cwid, course, grade, instructor_cwid in file_reader(os.path.join(self._dir_path, "grades.txt"), 4, "|", True):
+            for cwid, course, grade, instructor_cwid in file_reader(os.path.join(self._dir_path, "grades.txt"), 4, "\t", True):
                 if cwid in self._students:
                     s: Student = self._students[cwid]
                     s.course_grade(course, grade)
@@ -175,6 +188,22 @@ class Repository:
 
         except (FileNotFoundError, ValueError) as e:
             print(e)
+    
+    def student_grades_table_db(self, db_path) -> List[Tuple]:
+        """ Reads the data from the database """
+        # DB_FILE: str = "D:/MS/Stevens Institute of Technology/SSW810/Assignment11/HW11.sql"
+        rows: List[Tuple] = list()
+        db: sqlite3.Connection = sqlite3.connect(db_path)
+        query: str = """ select s.Name, s.CWID, g.Course, g.Grade, i.Name
+                        from students s, grades g, instructors i
+                        where s.CWID = g.StudentCWID and g.InstructorCWID = i.CWID
+                        order by s.Name; """
+        pt: PrettyTable = PrettyTable(field_names=["Name","CWID","Course","Grade","Instructor"])
+        for row in db.execute(query):
+            pt.add_row(row)
+            rows.append(row)
+        print(pt)
+        return rows
     
     def student_pretty_table(self) -> None:
         """ print student info pretty table """
@@ -200,7 +229,7 @@ class Repository:
 
 def main():
     try:
-        stevens: Repository = Repository('D:\MS\Stevens Institute of Technology\SSW810\Assignment10\Stevens') # read files and generate prettytables
+        stevens: Repository = Repository('D:\MS\Stevens Institute of Technology\SSW810\Assignment11\data') # read files and generate prettytables
     except Exception as e:
         print(e)
 
