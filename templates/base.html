@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Students details </title>
+    </head>
+    <body>
+        <h1>Stevens Repository</h1>
+        <h3>Student, Course, Grade, and Instructor</h3>
+        <br/>
+        <table border="1">
+            <th>Student</th>
+            <th>CWID</th>
+            <th>Course</th>
+            <th>Grade</th>
+            <th>Instructor</th>
+            {% for student in students %}
+                <tr>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.CWID }}</td>
+                    <td>{{ student.course }}</td>
+                    <td>{{ student.grade }}</td>
+                    <td>{{ student.instructor }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
